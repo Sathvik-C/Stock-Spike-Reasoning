@@ -1,0 +1,49 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.env/
+*.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# -------------------------
+# IDE / Editor
+# -------------------------
+.vscode/
+.idea/
+
+# -------------------------
+# Streamlit (API keys & secrets)
+# -------------------------
+.streamlit/secrets.toml
+
+# -------------------------
+# OS / System files
+# -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------
+# Logs & Cache
+# -------------------------
+*.log
+.cache/
+*.sqlite3
+*.db
+
+# -------------------------
+# OneDrive temp/sync files
+# -------------------------
+~$*
+*.tmp
+*.lnk
