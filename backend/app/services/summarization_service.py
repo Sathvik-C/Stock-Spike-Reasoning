@@ -1,4 +1,4 @@
-"""Service for summarizing financial news using DistilBART.
+"""Service for summarizing financial news using DistilBART via Hugging Face API.
 
 Strategy:
 - Combine paragraphs from all scraped articles into one block
@@ -6,17 +6,16 @@ Strategy:
 - Run one single distilbart pass on the combined text
 - No per-article summaries — one clean combined summary
 """
+import os
 import re
+import requests
 from typing import Dict, List, Optional
 
-try:
-    from transformers import pipeline
-    _HAS_TRANSFORMERS = True
-except Exception:
-    pipeline = None
-    _HAS_TRANSFORMERS = False
+# Removed torch and transformers
+_HAS_TRANSFORMERS = False
 
 MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
+API_URL = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
 FALLBACK_SUMMARY = "Summary unavailable — could not extract article content."
 
 # Minimum combined word count to attempt summarization
@@ -27,20 +26,9 @@ class SummarizationService:
     """DistilBART-based summarization — combines all articles, deduplicates, summarizes once."""
 
     def __init__(self):
-        self.pipeline = None
-        self.available = False
-
-        if _HAS_TRANSFORMERS:
-            try:
-                self.pipeline = pipeline(
-                    "summarization",
-                    model=MODEL_NAME,
-                    device=-1,  # CPU
-                )
-                self.available = True
-            except Exception:
-                self.pipeline = None
-                self.available = False
+        self.api_token = os.environ.get("HF_API_TOKEN")
+        self.headers = {"Authorization": f"Bearer {self.api_token}"} if self.api_token else {}
+        self.available = bool(self.api_token)
 
     # ── Helpers ───────────────────────────────────────────────────────────
 
@@ -54,24 +42,31 @@ class SummarizationService:
         return result + "." if result and not result.endswith(".") else result
 
     def _run_pipeline(self, text: str) -> Optional[str]:
-        """Run distilbart on text. Returns None on failure."""
-        if not self.available or not self.pipeline or not text.strip():
+        """Run distilbart on text via API. Returns None on failure."""
+        if not self.available or not text.strip():
             return None
         try:
             word_count = len(text.split())
-            # distilbart max_length must be less than input length
             max_len = min(130, max(30, word_count // 2))
             min_len = min(30, max(10, word_count // 4))
-            response = self.pipeline(
-                text,
-                max_length=max_len,
-                min_length=min_len,
-                do_sample=False,
-                truncation=True,
-            )
-            if not response:
-                return None
-            return str(response[0].get("summary_text", "")).strip() or None
+            
+            payload = {
+                "inputs": text,
+                "parameters": {
+                    "max_length": max_len,
+                    "min_length": min_len,
+                    "truncation": "only_first"
+                },
+                "options": {"wait_for_model": True}
+            }
+            
+            response = requests.post(API_URL, headers=self.headers, json=payload, timeout=20)
+            if response.status_code == 200:
+                result = response.json()
+                if result and isinstance(result, list) and len(result) > 0:
+                    summary = result[0].get("summary_text", "")
+                    return str(summary).strip() or None
+            return None
         except Exception:
             return None
 
