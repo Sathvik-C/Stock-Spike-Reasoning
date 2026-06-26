@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyVault | AI-Powered Academic Organizer</title>
+  <meta name="description" content="Turn chaotic WhatsApp and Telegram college groups into organized academic vaults using AI.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --success: #5FAE7C;
+      --danger: #E25C5C;
+      --danger-light: #ff8b8b;
+      --bg-base: #14151F;
+      --bg-raised: #1F2031;
+      --bg-hover: #262738;
+      --text-primary: #EDEDF2;
+      --text-secondary: #8B8D9E;
+      --text-muted: #5D5F70;
+      --accent: #E8A33D;
+      --accent-bg: rgba(232,163,61,0.10);
+      --accent-border: rgba(232,163,61,0.22);
+      --border: #282A3A;
+      --font-serif: 'Fraunces', serif;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    :root[data-theme="light"] {
+      --bg-base: #F8F9FA;
+      --bg-raised: #FFFFFF;
+      --bg-hover: #F1F3F5;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-muted: #868E96;
+      --accent: #D97706;
+      --accent-bg: rgba(217,119,6,0.10);
+      --accent-border: rgba(217,119,6,0.22);
+      --border: #DEE2E6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* Layout & Containers */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navbar */
+    header {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand i { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .github-link:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+    .theme-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .theme-toggle-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 100px 0 80px;
+      text-align: center;
+    }
+    .tagline {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      background: var(--accent-bg);
+      padding: 6px 12px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: 56px;
+      line-height: 1.1;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-base);
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn-primary:hover {
+      background: #f0b04a;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--bg-raised);
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    /* Abstract UI Preview */
+    .hero-preview {
+      margin-top: 60px;
+      padding: 24px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      display: flex;
+      text-align: left;
+      gap: 24px;
+    }
+    .preview-sidebar { width: 200px; border-right: 1px solid var(--border); padding-right: 24px; }
+    .preview-main { flex: 1; }
+    .skeleton-line { height: 12px; background: var(--bg-hover); border-radius: 4px; margin-bottom: 12px; }
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.accent { background: var(--accent-bg); width: 40%; }
+    .preview-file { display: flex; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; align-items: center;}
+    .preview-icon { width: 24px; height: 24px; background: var(--bg-hover); border-radius: 4px; }
+
+    /* Problem vs Solution */
+    .problem-solution {
+      padding: 100px 0;
+      border-top: 1px solid var(--border);
+    }
+    .ps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .ps-card {
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .ps-card.problem { background: rgba(255,100,100,0.02); border-color: rgba(255,100,100,0.1); }
+    .ps-card.solution { background: var(--accent-bg); border-color: var(--accent-border); }
+    .ps-card h3 {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .problem h3 { color: var(--danger-light); }
+    .solution h3 { color: var(--accent); }
+    .ps-card p { color: var(--text-secondary); margin-bottom: 24px; }
+    .ps-list { list-style: none; }
+    .ps-list li { margin-bottom: 12px; display: flex; gap: 12px; font-size: 15px; }
+    .problem .ps-list i { color: var(--danger-light); }
+    .solution .ps-list i { color: var(--accent); }
+
+    /* Features Section */
+    .features { padding: 80px 0; }
+    .section-header { text-align: center; margin-bottom: 60px; }
+    .section-header h2 {
+      font-family: var(--font-serif);
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+    .section-header p { color: var(--text-secondary); }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--bg-raised);
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: transform 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); border-color: var(--accent-border); }
+    .feature-icon {
+      width: 48px; height: 48px;
+      background: var(--bg-hover);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
+      color: var(--accent);
+    }
+    .feature-card h4 { font-size: 18px; margin-bottom: 12px; font-weight: 600; }
+    .feature-card p { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+
+    /* Tech Stack */
+    .tech-stack {
+      padding: 100px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .tech-grid {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .tech-badge {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      padding: 12px 24px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 40px; }
+      .ps-grid, .features-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero-preview { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-inner">
+      <div class="brand"><i data-lucide="book-open"></i> StudyVault</div>
+      <nav class="nav-links">
+        <a href="#problem">The Problem</a>
+        <a href="#features">Features</a>
+        <a href="#tech">Tech Stack</a>
+        <a href="https://github.com" target="_blank" class="github-link"><i data-lucide="github"></i> Source Code</a>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme"></button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero container">
+    <div class="tagline">Built for the modern student</div>
+    <h1>Turn Chaotic Group Chats into<br>Organized Academic Vaults.</h1>
+    <p>StudyVault automatically ingests WhatsApp and Telegram chat exports, using AI to extract, categorize, and organize files, notes, and deadlines.</p>
+    <div class="cta-group">
+      <a href="studyvault.html" class="btn-primary">
+        View Live Dashboard <i data-lucide="arrow-right"></i>
+      </a>
+      <a href="#features" class="btn-secondary">Learn More</a>
+    </div>
+
+    <!-- Abstract Preview Graphic -->
+    <div class="hero-preview">
+      <div class="preview-sidebar">
+        <div class="skeleton-line" style="margin-bottom: 24px;"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+      <div class="preview-main">
+        <div class="skeleton-line accent" style="height: 24px; margin-bottom: 24px;"></div>
+        <div class="preview-file">
+          <div class="preview-icon"><i data-lucide="file-text" style="width:14px; margin:5px; color:var(--text-muted)"></i></div>
+          <div style="flex:1">
+            <div class="skeleton-line" style="margin-bottom: 6px;"></div>
+            <div class="skeleton-line short" style="margin-bottom: 0;"></div>
+          </div>
+          <div class="tagline" style="margin:0; font-size:10px; padding:2px 6px;">Notes</div>
+        </div>
+        <div class="preview-file">
+          <div class="preview-icon"><i data-lucide="file-text" style="width:14px; margin:5px; color:var(--text-muted)"></i></div>
+          <div style="flex:1">
+            <div class="skeleton-line" style="margin-bottom: 6px;"></div>
+            <div class="skeleton-line" style="width:40%; margin-bottom: 0;"></div>
+          </div>
+          <div class="tagline" style="margin:0; font-size:10px; padding:2px 6px; background: rgba(95,174,124,0.1); color: #5FAE7C;">Assignments</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="problem" class="problem-solution">
+    <div class="container ps-grid">
+      <div class="ps-card problem">
+        <h3><i data-lucide="x-circle"></i> The Chaos</h3>
+        <p>Academic group chats are a mess of memes, casual conversations, and critical study materials. Important files get buried fast.</p>
+        <ul class="ps-list">
+          <li><i data-lucide="alert-circle"></i> Scrolling endlessly to find that one PDF</li>
+          <li><i data-lucide="alert-circle"></i> Missing assignment deadlines lost in chatter</li>
+          <li><i data-lucide="alert-circle"></i> Downloading duplicates of the same notes</li>
+        </ul>
+      </div>
+      <div class="ps-card solution">
+        <h3><i data-lucide="check-circle"></i> The Vault</h3>
+        <p>Export your chat, drop it into StudyVault, and let AI do the heavy lifting. Your study materials are instantly structured.</p>
+        <ul class="ps-list">
+          <li><i data-lucide="check"></i> Files categorized automatically (Notes, Exams, etc.)</li>
+          <li><i data-lucide="check"></i> Deadlines and important announcements flagged</li>
+          <li><i data-lucide="check"></i> Universal search across messages and documents</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="features container">
+    <div class="section-header">
+      <h2>Why StudyVault Stands Out</h2>
+      <p>Designed to solve a real-world problem with modern engineering.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="brain-circuit"></i></div>
+        <h4>AI-Powered Categorization</h4>
+        <p>Uses Natural Language Processing to understand the context of shared files and automatically sorts them into appropriate folders like Notes, Assignments, or Resources.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="flag"></i></div>
+        <h4>Deadline Extraction</h4>
+        <p>The system reads through the noise to identify and flag critical announcements, extracting dates for assignment deadlines and exam schedules.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="search"></i></div>
+        <h4>Universal Search</h4>
+        <p>Stop scrolling. Instantly search across thousands of messages, file names, and extracted text to find exactly what you need in milliseconds.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="database"></i></div>
+        <p class="tagline" style="margin-bottom: 8px; font-size:10px; padding: 2px 6px;">Technical</p>
+        <h4>Robust Backend</h4>
+        <p>Built on a high-performance FastAPI architecture capable of parsing massive `.txt` and `.json` chat exports efficiently.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="layout"></i></div>
+        <p class="tagline" style="margin-bottom: 8px; font-size:10px; padding: 2px 6px;">Technical</p>
+        <h4>Purpose-Driven UI</h4>
+        <p>A distraction-free, editorially-designed interface optimized for academic focus. Built with React for a snappy, single-page experience.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="lock"></i></div>
+        <p class="tagline" style="margin-bottom: 8px; font-size:10px; padding: 2px 6px;">Technical</p>
+        <h4>Local First Privacy</h4>
+        <p>Your chat logs are personal. Processing is designed to be secure, with parsed metadata structured strictly for your own organization.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech" class="tech-stack">
+    <div class="container">
+      <div class="section-header" style="margin-bottom: 20px;">
+        <h2>Engineered with Modern Tools</h2>
+        <p>A full-stack project built for performance and scalability.</p>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-badge"><i data-lucide="code-2"></i> React & Vite</div>
+        <div class="tech-badge"><i data-lucide="server"></i> FastAPI</div>
+        <div class="tech-badge"><i data-lucide="database"></i> SQLite / SQLAlchemy</div>
+        <div class="tech-badge"><i data-lucide="bot"></i> Python NLP / LLMs</div>
+        <div class="tech-badge"><i data-lucide="palette"></i> Vanilla CSS</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 StudyVault. Built for academic excellence.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Theme toggle logic
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const root = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    
+    function applyTheme(theme) {
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+        themeToggleBtn.innerHTML = '<i data-lucide="moon" style="width: 20px; height: 20px;"></i>';
+      } else {
+        root.removeAttribute('data-theme');
+        themeToggleBtn.innerHTML = '<i data-lucide="sun" style="width: 20px; height: 20px;"></i>';
+      }
+      lucide.createIcons();
+    }
+    
+    applyTheme(currentTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', currentTheme);
+      applyTheme(currentTheme);
+    });
+  </script>
+</body>
+</html>

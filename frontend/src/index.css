@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-primary: #0f172a;
+    --color-muted: #64748b;
+    --color-positive: #16a34a;
+    --color-negative: #dc2626;
+    --color-neutral: #2563eb;
+    --color-warning: #d97706;
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-accent: #0d9488;
+    --color-skeleton-base: #e2e8f0;
+    --color-skeleton-highlight: #f1f5f9;
+    --color-chart-grid: rgba(0, 0, 0, 0.06);
+    --color-chart-axis: #94a3b8;
+    --color-chart-cursor: rgba(0, 0, 0, 0.1);
+    --color-chart-dot-stroke: #ffffff;
+    --color-scatter-current: #0f172a;
+  }
+
+  .dark {
+    --color-bg: #0a0e1a;
+    --color-surface: #111827;
+    --color-primary: #f9fafb;
+    --color-muted: #6b7280;
+    --color-positive: #22c55e;
+    --color-negative: #ef4444;
+    --color-neutral: #3b82f6;
+    --color-warning: #f59e0b;
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-accent: #14b8a6;
+    --color-skeleton-base: #111827;
+    --color-skeleton-highlight: #1f2937;
+    --color-chart-grid: rgba(255, 255, 255, 0.06);
+    --color-chart-axis: #6b7280;
+    --color-chart-cursor: rgba(255, 255, 255, 0.1);
+    --color-chart-dot-stroke: #111827;
+    --color-scatter-current: #ffffff;
+  }
+
+  body {
+    @apply bg-bg text-primary font-sans antialiased m-0 p-0 transition-colors duration-200;
+  }
+  
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply bg-surface border border-border rounded-lg shadow-sm transition-colors duration-200;
+  }
+}

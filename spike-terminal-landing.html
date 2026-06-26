@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spike Terminal | AI-Powered Market Intelligence</title>
+  <meta name="description"
+    content="AI-driven root cause analysis for NIFTY 100 stock spikes. Engineered with FastAPI, React, and FinBERT.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      /* Deep sleek financial dark mode */
+      --bg-base: #050507;
+      --bg-raised: #0F1014;
+      --bg-hover: #1A1C23;
+
+      --text-primary: #FFFFFF;
+      --text-secondary: #94A3B8;
+      --text-muted: #475569;
+
+      /* Tech/Finance Accents */
+      --accent: #00E5FF;
+      /* Cyan */
+      --accent-glow: rgba(0, 229, 255, 0.15);
+      --success: #10B981;
+      /* Emerald Green */
+      --danger: #EF4444;
+      /* Red */
+
+      --border: #1E293B;
+
+      --bg-overlay: rgba(255, 255, 255, 0.05);
+      --bg-overlay-hover: rgba(255, 255, 255, 0.08);
+      --bg-overlay-light: rgba(255, 255, 255, 0.03);
+      --feat-icon-bg: rgba(0, 229, 255, 0.05);
+
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    :root[data-theme="light"] {
+      --bg-base: #F8FAFC;
+      --bg-raised: #FFFFFF;
+      --bg-hover: #F1F5F9;
+
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+
+      --accent: #0284C7;
+      --accent-glow: rgba(2, 132, 199, 0.15);
+      --success: #059669;
+      --danger: #DC2626;
+
+      --border: #E2E8F0;
+
+      --bg-overlay: rgba(0, 0, 0, 0.05);
+      --bg-overlay-hover: rgba(0, 0, 0, 0.08);
+      --bg-overlay-light: rgba(0, 0, 0, 0.03);
+      --feat-icon-bg: rgba(2, 132, 199, 0.1);
+    }
+
+    .theme-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .theme-toggle-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, transparent 50%);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Layout & Containers */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navbar */
+    header {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--bg-overlay);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.05em;
+    }
+
+    .brand i {
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: all 0.2s;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .github-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 120px 0 100px;
+      text-align: center;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      margin-bottom: 32px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .hero h1 {
+      font-size: 64px;
+      line-height: 1.1;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+    }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--text-secondary);
+      max-width: 650px;
+      margin: 0 auto 48px;
+    }
+
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-base);
+      padding: 14px 28px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-overlay-light);
+      color: var(--text-primary);
+      padding: 14px 28px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-overlay-hover);
+      border-color: var(--text-secondary);
+    }
+
+    /* The Problem vs Solution */
+    .ps-section {
+      padding: 100px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    .card {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 40px;
+    }
+
+    .card.problem {
+      border-top: 3px solid var(--danger);
+    }
+
+    .card.solution {
+      border-top: 3px solid var(--accent);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.solution::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      background: var(--accent);
+      filter: blur(80px);
+      opacity: 0.1;
+    }
+
+    .card h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+    }
+
+    .card.problem h3 {
+      color: var(--danger);
+    }
+
+    .card.solution h3 {
+      color: var(--accent);
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      font-size: 16px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+
+    .metric-row i {
+      color: var(--text-muted);
+    }
+
+    /* Features Matrix */
+    .features {
+      padding: 100px 0;
+      background: var(--bg-raised);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-header h2 {
+      font-size: 36px;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feat-card {
+      background: var(--bg-base);
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .feat-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .feat-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--feat-icon-bg);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      color: var(--accent);
+    }
+
+    .feat-card h4 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .feat-card p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Architecture / Tech Stack */
+    .architecture {
+      padding: 100px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .arch-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .stack-tier {
+      width: 100%;
+      max-width: 800px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-raised);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stack-tier-label {
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      font-size: 14px;
+      width: 150px;
+    }
+
+    .stack-items {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: var(--bg-overlay);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge i {
+      color: var(--accent);
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Footer */
+    footer {
+      padding-top: 40px;
+      border-top: 1px solid var(--bg-overlay);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 48px;
+      }
+
+      .grid-2,
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stack-tier {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .stack-items {
+        justify-content: flex-start;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav-inner">
+      <div class="brand"><i data-lucide="activity"></i> SPIKE_TERMINAL</div>
+      <nav class="nav-links">
+        <a href="#problem">The Engine</a>
+        <a href="#features">Capabilities</a>
+        <a href="#architecture">Architecture</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="https://github.com" target="_blank" class="github-link"><i data-lucide="github"></i> Repository</a>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme"></button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero container">
+    <div class="status-badge">
+      <div class="status-dot"></div> System Operational \u2014 NIFTY 100 Tracking Active
+    </div>
+    <h1>Decode the Market.<br><span>Instantly.</span></h1>
+    <p>An institutional-grade analysis engine that detects abnormal stock spikes and uses NLP to instantly explain the
+      underlying root cause.</p>
+    <div class="cta-group">
+      <a href="http://localhost:3000" class="btn-primary" target="_blank">
+        Launch Terminal <i data-lucide="terminal"></i>
+      </a>
+      <a href="#architecture" class="btn-secondary">View Architecture</a>
+    </div>
+  </section>
+
+  <section id="problem" class="ps-section container">
+    <div class="grid-2">
+      <div class="card problem">
+        <h3><i data-lucide="trending-up"></i> The Blind Spot</h3>
+        <p>When a stock spikes 15% in an hour, finding the *why* is a manual, fragmented process. Retail investors and
+          analysts waste critical minutes scouring news, filings, and Twitter while the opportunity window closes.</p>
+        <div class="metric-row"><i data-lucide="clock"></i> <span>Average discovery time: 25+ minutes</span></div>
+        <div class="metric-row"><i data-lucide="search-x"></i> <span>Fragmented data sources</span></div>
+        <div class="metric-row"><i data-lucide="brain"></i> <span>Manual sentiment interpretation required</span></div>
+      </div>
+      <div class="card solution">
+        <h3><i data-lucide="zap"></i> The Spike Engine</h3>
+        <p>Spike Terminal automates the entire discovery pipeline. It ingests price data, scrapes real-time news via
+          Playwright, runs FinBERT sentiment analysis, and outputs a DistilBART summary in seconds.</p>
+        <div class="metric-row" style="color:var(--text-primary)"><i data-lucide="timer"
+            style="color:var(--accent)"></i> <span>Root cause analysis in < 5 seconds</span>
+        </div>
+        <div class="metric-row" style="color:var(--text-primary)"><i data-lucide="layers"
+            style="color:var(--accent)"></i> <span>Aggregated Fundamental & Technical data</span></div>
+        <div class="metric-row" style="color:var(--text-primary)"><i data-lucide="cpu" style="color:var(--accent)"></i>
+          <span>AI-driven contextual summarization</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Terminal Capabilities</h2>
+        <p>A layered signal engine designed for precision and speed.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feat-card">
+          <div class="feat-icon"><i data-lucide="brain-circuit"></i></div>
+          <h4>Financial NLP Engine</h4>
+          <p>Utilizes FinBERT to accurately gauge the sentiment of breaking financial news, specifically trained on
+            market vernacular to distinguish between noise and material impact.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><i data-lucide="file-text"></i></div>
+          <h4>DistilBART Summarization</h4>
+          <p>Don't read 10 articles. The backend automatically condenses multiple lengthy financial reports into a
+            single, high-signal paragraph explaining the price action.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><i data-lucide="globe"></i></div>
+          <h4>Headless Scraping</h4>
+          <p>Powered by Playwright (Chromium) to bypass static roadblocks and extract dynamic, real-time news data from
+            major financial portals the second a spike occurs.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><i data-lucide="bar-chart-2"></i></div>
+          <h4>Technical Aggregation</h4>
+          <p>Instantly pulls moving averages, RSI, and volume profiles, overlaying them against the fundamental news
+            data for a complete picture.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><i data-lucide="building-2"></i></div>
+          <h4>Sector Clustering</h4>
+          <p>Groups stocks by sector and historical correlation to determine if a spike is idiosyncratic
+            (company-specific) or systemic (sector-wide).</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><i data-lucide="layout-dashboard"></i></div>
+          <h4>Reactive Frontend</h4>
+          <p>A sleek, Bloomberg-inspired UI built with React and Tailwind CSS. Utilizes Framer Motion for fluid
+            transitions and React Query for aggressive state caching.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture" class="architecture container">
+    <div class="section-header">
+      <h2>Full-Stack Architecture</h2>
+      <p>Built strictly with production-grade tooling.</p>
+    </div>
+    <div class="arch-wrapper">
+
+      <div class="stack-tier">
+        <div class="stack-tier-label">Frontend (Client)</div>
+        <div class="stack-items">
+          <div class="badge"><i data-lucide="atom"></i> React 18</div>
+          <div class="badge"><i data-lucide="zap"></i> Vite</div>
+          <div class="badge"><i data-lucide="wind"></i> Tailwind CSS</div>
+          <div class="badge"><i data-lucide="server"></i> React Query</div>
+        </div>
+      </div>
+
+      <div class="stack-tier">
+        <div class="stack-tier-label">Backend (API)</div>
+        <div class="stack-items">
+          <div class="badge"><i data-lucide="server"></i> FastAPI</div>
+          <div class="badge"><i data-lucide="box"></i> Pydantic</div>
+          <div class="badge"><i data-lucide="globe"></i> Playwright</div>
+        </div>
+      </div>
+
+      <div class="stack-tier">
+        <div class="stack-tier-label">Machine Learning</div>
+        <div class="stack-items">
+          <div class="badge"><i data-lucide="cpu"></i> FinBERT (Sentiment)</div>
+          <div class="badge"><i data-lucide="network"></i> DistilBART (Summarization)</div>
+          <div class="badge"><i data-lucide="box"></i> Transformers (HuggingFace)</div>
+        </div>
+      </div>
+
+      <div class="stack-tier">
+        <div class="stack-tier-label">Data Layer</div>
+        <div class="stack-items">
+          <div class="badge"><i data-lucide="database"></i> PostgreSQL</div>
+          <div class="badge"><i data-lucide="database"></i> SQLAlchemy ORM</div>
+          <div class="badge"><i data-lucide="git-commit"></i> Alembic</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>SPIKE_TERMINAL &copy; 2024. Designed for the Modern Analyst.</p>
+    </div>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+    function applyTheme(theme) {
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+        themeToggleBtn.innerHTML = '<i data-lucide="moon" style="width: 20px; height: 20px;"></i>';
+      } else {
+        root.removeAttribute('data-theme');
+        themeToggleBtn.innerHTML = '<i data-lucide="sun" style="width: 20px; height: 20px;"></i>';
+      }
+      lucide.createIcons();
+    }
+
+    applyTheme(currentTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', currentTheme);
+      applyTheme(currentTheme);
+    });
+  </script>
+</body>
+
+</html>
+
+
