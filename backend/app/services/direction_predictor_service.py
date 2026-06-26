@@ -18,7 +18,7 @@ import pandas as pd
 try:
     from xgboost import XGBClassifier
     _HAS_XGBOOST = True
-except ImportError:
+except Exception:
     XGBClassifier = None
     _HAS_XGBOOST = False
 
