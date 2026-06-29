@@ -1,24 +1,32 @@
-FROM node:18-alpine
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
-COPY frontend/package.json frontend/package-lock.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy app
-COPY frontend/src ./src
-COPY frontend/public ./public
-COPY frontend/vite.config.js .
-COPY frontend/index.html .
+# Copy source
+COPY src ./src
+COPY public ./public
+COPY vite.config.js .
+COPY index.html .
+COPY postcss.config.js .
+COPY tailwind.config.js .
 
-# Build
+# Build for production
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-# Expose port
-EXPOSE 3000
+# ── Production stage: serve with lightweight static server ──
+FROM node:18-alpine
 
-# Serve
-CMD ["npm", "run", "dev"]
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 3000
+CMD ["serve", "-s", "dist", "-l", "3000"]

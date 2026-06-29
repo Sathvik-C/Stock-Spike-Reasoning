@@ -1,6 +1,7 @@
 """Service for detecting top movers and price spikes."""
 import contextlib
 import io
+# pyrefly: ignore [missing-import]
 import yfinance as yf
 import pandas as pd
 from typing import Dict, List, Optional, Tuple
