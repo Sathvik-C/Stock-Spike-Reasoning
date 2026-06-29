@@ -319,7 +319,7 @@ export default function Home() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-surface/80 backdrop-blur border border-border rounded-lg py-4 pl-12 pr-32 text-base text-gray-900 dark:text-white placeholder-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+                  className="w-full bg-white dark:bg-[#111827] backdrop-blur border border-border rounded-lg py-4 pl-12 pr-32 text-base text-black dark:text-white placeholder-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                   placeholder="Enter ticker (e.g. RELIANCE)..."
                 />
                 <button
