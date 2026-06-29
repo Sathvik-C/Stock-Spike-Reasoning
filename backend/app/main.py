@@ -16,13 +16,13 @@ app = FastAPI(
     debug=settings.debug,
 )
 
-# CORS middleware
+# CORS middleware — allow all origins (public stock data API)
 import os as _os
-_raw_origins = _os.environ.get(
-    "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:5173"
-)
-_allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+_raw_origins = _os.environ.get("ALLOWED_ORIGINS", "*")
+if _raw_origins.strip() == "*":
+    _allowed_origins = ["*"]
+else:
+    _allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
