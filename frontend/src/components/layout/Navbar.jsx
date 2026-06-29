@@ -44,7 +44,7 @@ export default function Navbar() {
               type="text" 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-surface border border-border rounded-md py-1.5 pl-10 pr-3 text-sm text-primary placeholder-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              className="w-full bg-transparent border border-border rounded-md py-1.5 pl-10 pr-3 text-sm text-gray-900 dark:text-white placeholder-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               placeholder="Search ticker (e.g. RELIANCE.NS)..."
             />
           </form>
