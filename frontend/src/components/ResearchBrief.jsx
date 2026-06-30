@@ -65,6 +65,23 @@ export default function ResearchBrief({ analysis, sectorData, technicalData, ear
             <li>Total revenue: {typeof earnings?.total_revenue === 'number' ? earnings.total_revenue.toLocaleString() : 'N/A'}</li>
             <li>Net income: {typeof earnings?.net_income === 'number' ? earnings.net_income.toLocaleString() : 'N/A'}</li>
             <li>Operating income: {typeof earnings?.operating_income === 'number' ? earnings.operating_income.toLocaleString() : 'N/A'}</li>
+            
+            {/* BSE Filing PDF Link */}
+            {earningsData?.bse_filing?.attachment_url && (
+              <li style={{ marginTop: '8px' }}>
+                <a 
+                  href={earningsData.bse_filing.attachment_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 'bold' }}
+                >
+                  📄 View Official BSE PDF
+                </a>
+                <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '2px' }}>
+                  {earningsData.bse_filing.headline}
+                </div>
+              </li>
+            )}
           </ul>
         )}
       </div>
