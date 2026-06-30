@@ -20,10 +20,27 @@ from app.utils.nifty100 import NIFTY100, NIFTY100_NAMES
 
 _reason_engine = ReasonEngine()
 
-# ── In-memory cache for news summaries ───────────────────────────────────────
-# Structure: { ticker: { "data": {...}, "expires_at": float } }
+# ── In-memory TTL caches ─────────────────────────────────────────────────────
+# Structure: { cache_key: { "data": {...}, "expires_at": float } }
 _news_summary_cache: Dict[str, Any] = {}
 NEWS_SUMMARY_TTL = 12 * 60 * 60  # 12 hours in seconds
+
+_endpoint_cache: Dict[str, Any] = {}
+ENDPOINT_CACHE_TTL = 5 * 60  # 5 minutes
+
+
+def _cache_get(key: str) -> Any:
+    """Return cached value if still valid, else None."""
+    entry = _endpoint_cache.get(key)
+    if entry and time.time() < entry["expires_at"]:
+        return entry["data"]
+    return None
+
+
+def _cache_set(key: str, data: Any, ttl: int = ENDPOINT_CACHE_TTL) -> None:
+    """Store a value in the endpoint cache."""
+    _endpoint_cache[key] = {"data": data, "expires_at": time.time() + ttl}
+
 
 router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 
@@ -110,6 +127,11 @@ def get_stock_analysis(
     db: Session = Depends(get_db)
 ):
     """Get complete analyst research brief for a stock."""
+    cache_key = f"analysis_{ticker}_{lookback_days}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
     period = f"{lookback_days}d"
     price_df = get_recent_data(ticker, period=period, interval="1d")
     if price_df is None or price_df.empty:
@@ -179,7 +201,7 @@ def get_stock_analysis(
 
     direction_pred = predict_direction(ticker)
 
-    return {
+    result = {
         "ticker": ticker,
         "lookback_days": lookback_days,
         "price_change": round(change_pct, 2),
@@ -194,6 +216,8 @@ def get_stock_analysis(
         "top_news": news_items[:5],
         "direction_prediction": direction_pred,
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/{ticker}/chart-data")
@@ -234,15 +258,22 @@ def get_chart_data(
 @router.get("/{ticker}/earnings")
 def get_earnings_data(ticker: str, db: Session = Depends(get_db)):
     """Get quarterly earnings data."""
+    cache_key = f"earnings_{ticker}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
     fired, earnings = check_earnings_release(ticker, lookback_days=1)
     bse_filing = get_latest_earnings_filing(ticker, lookback_days=30)
     
-    return {
+    result = {
         "ticker": ticker,
         "recent_release": fired,
         "earnings": earnings,
         "bse_filing": bse_filing
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/{ticker}/news")
@@ -297,6 +328,11 @@ def get_stock_news(
 @router.get("/{ticker}/sector")
 def get_sector_comparison(ticker: str, db: Session = Depends(get_db)):
     """Get sector context and comparison."""
+    cache_key = f"sector_{ticker}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
     stock_change_raw = get_top_movers_service([ticker], days=1).get("movement", {}).get(ticker)
 
     stock_change = _safe_pct(stock_change_raw, default=float("nan"))
@@ -309,25 +345,34 @@ def get_sector_comparison(ticker: str, db: Session = Depends(get_db)):
             stock_change = ((close_last - open_first) / open_first) * 100 if open_first else 0.0
 
     sector = compare_stock_to_sector(ticker, stock_change, lookback_days=1)
-    return {
+    result = {
         "ticker": ticker,
         "sector": sector,
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/{ticker}/technical")
 def get_technical_signals(ticker: str, db: Session = Depends(get_db)):
     """Get technical indicators (RSI, MACD, Volume, Bollinger Bands)."""
+    cache_key = f"technical_{ticker}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
     df = get_recent_data(ticker, period="3mo", interval="1d")
     signals = calculate_technical_signals(df) if df is not None else {}
     breakout, summary = check_technical_breakout(signals)
 
-    return {
+    result = {
         "ticker": ticker,
         "signals": signals,
         "breakout": breakout,
         "summary": summary,
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 

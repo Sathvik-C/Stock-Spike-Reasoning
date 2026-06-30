@@ -1,19 +1,34 @@
 """FastAPI application entry point."""
+import threading
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 from app.api import router_stocks
 from app.models import Stock, Analysis, NewsArticle, FIIDIIActivity
+from app.utils.nifty100 import NIFTY100
+from app.services.spike_service import precompute_top_movers
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-warm caches on startup so the first visitor gets instant results."""
+    # Fire-and-forget background thread so it doesn't block the server boot
+    t = threading.Thread(target=precompute_top_movers, args=(NIFTY100,), daemon=True)
+    t.start()
+    yield
+
 
 # Initialize FastAPI app
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 # CORS middleware — allow all origins (public stock data API)
@@ -36,6 +51,12 @@ app.add_middleware(
 @app.get("/health")
 def health_check():
     return {"status": "ok", "app": settings.app_name, "version": settings.app_version}
+
+
+@app.get("/ping")
+def ping():
+    """Ultra-lightweight keep-alive endpoint for cron pings."""
+    return {"pong": True}
 
 
 # Include routers

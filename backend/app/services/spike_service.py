@@ -1,10 +1,17 @@
 """Service for detecting top movers and price spikes."""
 import contextlib
 import io
+import time
+import threading
 # pyrefly: ignore [missing-import]
 import yfinance as yf
 import pandas as pd
 from typing import Dict, List, Optional, Tuple
+
+
+# ── In-memory TTL cache for top movers ────────────────────────────────────────
+_top_movers_cache: Dict[str, tuple] = {}  # key -> (timestamp, result)
+_TOP_MOVERS_TTL = 300  # 5 minutes
 
 
 def _movement_from_close_series(close_series: pd.Series, days: int) -> Optional[float]:
@@ -25,15 +32,28 @@ def _movement_from_close_series(close_series: pd.Series, days: int) -> Optional[
 def get_top_movers(tickers: List[str], days: int = 1, top_n: int = 5) -> Dict:
     """
     Get top gainers and losers for a list of tickers over a period.
-    
+    Results are cached in-memory for 5 minutes to avoid hammering Yahoo Finance.
+
     Args:
         tickers: List of ticker symbols
         days: Lookback period in days
         top_n: Number of top gainers/losers to return
-    
+
     Returns:
         Dict with gainers, losers, and full movement data
     """
+    cache_key = f"movers_{len(tickers)}_{days}_{top_n}"
+    cached = _top_movers_cache.get(cache_key)
+    if cached and time.time() - cached[0] < _TOP_MOVERS_TTL:
+        return cached[1]
+
+    result = _fetch_top_movers(tickers, days, top_n)
+    _top_movers_cache[cache_key] = (time.time(), result)
+    return result
+
+
+def _fetch_top_movers(tickers: List[str], days: int = 1, top_n: int = 5) -> Dict:
+    """Internal: actually download and compute top movers."""
     try:
         period = f"{max(days + 7, 10)}d"
 
@@ -75,8 +95,19 @@ def get_top_movers(tickers: List[str], days: int = 1, top_n: int = 5) -> Dict:
         return {"gainers": [], "losers": [], "movement": {}, "error": str(exc)}
 
 
-import time
-import threading
+def precompute_top_movers(tickers: List[str]) -> None:
+    """Pre-warm the top movers cache. Called once on app startup in a background thread."""
+    print("[spike_service] Pre-computing top movers for homepage...")
+    try:
+        result = _fetch_top_movers(tickers, days=1, top_n=5)
+        cache_key = f"movers_{len(tickers)}_1_5"
+        _top_movers_cache[cache_key] = (time.time(), result)
+        g_count = len(result.get('gainers', {}))
+        l_count = len(result.get('losers', {}))
+        print(f"[spike_service] Pre-compute done: {g_count} gainers, {l_count} losers cached.")
+    except Exception as e:
+        print(f"[spike_service] Pre-compute failed: {e}")
+
 
 _data_cache: Dict[str, Tuple[float, Optional[pd.DataFrame]]] = {}
 _DATA_CACHE_TTL = 300  # 5 minutes
