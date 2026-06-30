@@ -153,23 +153,30 @@ def get_latest_earnings_filing(ticker: str, lookback_days: int = 7) -> Optional[
     """Find the most recent earnings/financial results filing for a stock.
 
     Filters filings where category or headline mentions 'Financial Results'.
+    If nothing is found within the initial lookback_days window, progressively
+    widens the search to 90, 180, and 365 days so the user always gets the
+    latest quarterly results PDF even if it was filed months ago.
 
     Args:
         ticker: NSE ticker symbol
-        lookback_days: How many days back to look
+        lookback_days: Initial number of days back to look
 
     Returns:
         Most recent earnings filing dict, or None
     """
-    filings = fetch_bse_filings(ticker, lookback_days=lookback_days)
-    if not filings:
-        return None
-
     EARNINGS_KEYWORDS = ["financial result", "quarterly result", "annual result"]
 
-    for filing in filings:
-        combined = f"{filing.get('category', '')} {filing.get('headline', '')}".lower()
-        if any(kw in combined for kw in EARNINGS_KEYWORDS):
-            return filing
+    # Try progressively wider windows until we find a filing
+    windows = sorted(set([lookback_days, 90, 180, 365]))
+
+    for window in windows:
+        filings = fetch_bse_filings(ticker, lookback_days=window)
+        if not filings:
+            continue
+
+        for filing in filings:
+            combined = f"{filing.get('category', '')} {filing.get('headline', '')}".lower()
+            if any(kw in combined for kw in EARNINGS_KEYWORDS):
+                return filing
 
     return None
